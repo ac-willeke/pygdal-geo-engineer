@@ -1,0 +1,57 @@
+# global variables
+study_area: country, county, municipality, district, city, area
+
+# project paths
+paths:
+  data_path: "/path/to/data"
+  stand_alone_data: ${STAND_ALONE_DATA}
+
+# postgis connection variables
+pg-connection:
+  pg_host: ${PG_HOST}
+  pg_port: ${PG_PORT}
+  pg_user: ${PG_USER}
+  pg_key: ${PG_KEY}
+
+# coordinate system
+spatial_reference:
+  utm32: "ETRS 1989 UTM Zone 32N"
+  utm33: "ETRS 1989 UTM Zone 33N"
+  utm35: "ETRS 1989 UTM Zone 35N"
+
+metadata:
+    identification:
+        title:
+            en: english title
+            no: norwegian title (bokmål)
+        description:
+            en: english title
+            no: norwegian title (bokmål)
+        keywords:
+            en:
+                - spatial data
+            no:
+                - romlige data
+        keywords_type: theme
+        terms_of_service: https://opensource.org/license/mit/
+        url: http://example.org
+    license:
+        name: The MIT License (MIT)
+        url: https://opensource.org/license/mit/
+    provider:
+        name: Organization Name
+        url: http://example.org
+    contact:
+        name: Lastname, Firstname
+        position: Position Title
+        address: Mailing Address
+        city: City
+        stateorprovince: Administrative Area
+        postalcode: Zip or Postal Code
+        country: Country
+        phone: +xx-xxx-xxx-xxxx
+        email: you@example.org
+        url: Contact URL
+        hours: Hours of Service
+        instructions: During hours of service.  Off on weekends.
+        role: pointOfContact

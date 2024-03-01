@@ -1,0 +1,19 @@
+{
+	"name": "<<Container Name>>",
+	"image": "<<image_name>>:<<image_tag>>",
+	"customizations":{
+		"vscode":{
+			"extensions": [
+				"ms-python.vscode-pylance",
+				"jupyter-notebook.nbextensions",
+				"jupyter-notebook.code-snippets",
+				"jupyter-notebook.table-of-contents"
+			]
+		}
+	},
+	"mounts":[
+		"source=/path/to/local/or/network/data/,target=/workspaces/<<project_name>>/mnt/data,type=bind,consistency=cached",
+		"source=/path/to/local/config,target=/workspaces/<<project_name>>/mnt/config,type=bind,consistency=cached"
+	]
+
+}
