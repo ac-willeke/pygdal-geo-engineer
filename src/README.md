@@ -22,3 +22,11 @@ Table of scripts and their purposes:
 | Script | Task |
 | ------ | ---- |
 | `gdal_attribute-lookup.py` | Reclassify an attribute value based on a lookup table. |
+
+## SQL scripts
+
+Table of scripts and their purposes:
+
+| Script | Task |
+| ------ | ---- |
+| `tables.sql` | SQL script for creating/importing tables |
