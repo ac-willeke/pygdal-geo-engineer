@@ -85,6 +85,9 @@ log/*
 !log/.gitkeep
 data/*
 !data/.gitkeep
+notebooks/private_projects/*
+!notebooks/private_projects/.gitkeep
+
 
 # vscode
 .vscode
