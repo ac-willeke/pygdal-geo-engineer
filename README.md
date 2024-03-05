@@ -49,32 +49,29 @@ exit
 - The authentication token is printed in the terminal when the server starts `http://localhost:8888/tree?token=...`
     
      
-   
+## Scripts and Notebooks
+
+More information about the standalone scripts and Jupyter notebooks can be found in the [src/README](/src/README.md) file and the [notebooks/README](/notebooks/README.md) file.
+
+For each project a new notebook is created in the `notebooks/` directory. The notebooks are designed to be run in a Jupyter environment and they utilize the scripts in the `src/` directory. 
+
+**Note**: If you run the notebooks in Colab, you will need to upload the `/data` and `/src` directories to the Colab environment.
+
+```python
+# upload the src/ directory to the Colab environment
+from google.colab import files
+uploaded = files.upload()
+
+# unzip the file
+!unzip src.zip
+!ls src
+```
 
 
 
 
- 
 
 
-
-
-
-
-
-
-
-
-### Workflow
-
-
-
-
-
-
-### References
--
--
 
 
 
