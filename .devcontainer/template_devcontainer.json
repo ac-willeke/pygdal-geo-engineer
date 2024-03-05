@@ -1,6 +1,6 @@
 {
-	"name": "<<Container Name>>",
-	"image": "<<image_name>>:<<image_tag>>",
+	"name": "Python3 GDAL",
+	"image": "gdal-python:0.0.1",
 	"customizations":{
 		"vscode":{
 			"extensions": [
@@ -12,8 +12,8 @@
 		}
 	},
 	"mounts":[
-		"source=/path/to/local/or/network/data/,target=/workspaces/<<project_name>>/mnt/data,type=bind,consistency=cached",
-		"source=/path/to/local/config,target=/workspaces/<<project_name>>/mnt/config,type=bind,consistency=cached"
+		"source=/path/to/data/,target=/workspaces/<<project_name>>/data,type=bind,consistency=cached",
+		"source=/path/to/config,target=/workspaces/<<project_name>>/config,type=bind,consistency=cached"
 	]
 
 }

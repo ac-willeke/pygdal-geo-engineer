@@ -2,28 +2,37 @@
 # Use the official GDAL image as the base image
 FROM osgeo/gdal:ubuntu-small-3.6.3
 
-# install pip
-RUN apt-get update && apt-get -y install python3-pip --fix-missing
-
-# install poetry
-RUN pip3 install poetry
-
 # Set the working directory in the container
 WORKDIR /app
 
-# --- Install all poetry dependencies ---
-# copy .toml and .lock files)
-# set virtualenvs.create to false, gdal image already comes with a virtualenv
-# --no root prevents poetry from using root privileges.
-# Poetry is only able to install depedences in the current venv.
-# More secure and isolated
+# Install pip and poetry, and clean up the apt cache
+RUN apt-get update && apt-get -y install python3-pip --fix-missing && \
+    pip3 install poetry && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# POETRY ==================================================================== #
+# copy .toml and .lock files
+# set virtualenvs.create to false
+# gdal image already comes with a virtualenv
+# --no root prevents poetry from using root privileges
+# Poetry can only install depedenies in the current .venv
+
 COPY pyproject.toml poetry.lock ./
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-root
-# ---------------------------------------
 
-# Change path to poetry venv
-RUN export PATH="/app/venv/bin:$PATH"
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root
 
-#EXPOSE 8888
-#CMD ["jupyter", "notebook", "--"]
+ENV PATH="/app/venv/bin:$PATH"
+# =========================================================================== #
+
+# JUPYTER =================================================================== #
+# Create a new user "jupyteruser" and change the owner of /app to jupyteruser
+RUN useradd -m jupyteruser && \
+    chown jupyteruser:jupyteruser /app
+
+# Expose port 8888 for the Jupyter notebook server
+EXPOSE 8888
+
+# Run Jupyter notebook server on container startup
+CMD sh -c "hostname -I && jupyter notebook --ip=0.0.0.0 --no-browser"
+# =========================================================================== #
