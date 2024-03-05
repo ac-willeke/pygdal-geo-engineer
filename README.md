@@ -1,66 +1,68 @@
-py-linux-template
+PYGDAL-GEO-ENGINEER
 ==============================
 
 **repo-status: work in progress**
 
-This is a template for a python project on linux.
+A collection of scripts to perform geospatial engineering tasks using GDAL, Python and SQL. The scripts are organized in a modular way under `src/` and are designed to be run from the command line or within a Jupyter notebook.
 
-The following files are included in this template:
+## Installation 
 
-0. [Project structure](docs/project_structure.md) to view the structure of this template.
+1. Clone the repository and navigate to the project directory
 
-1. **Makefile** to setup and configure your project
+2. Build the docker image
 
-2. Configuration files:
-    - [config.yaml](config/config.yaml) to set your project configuration
-    - [template.env](config/template.env) to set your environment variables
-    - [logging.yaml](config/logging.yaml) to set your logging configuration
-    - [pyproject.toml](pyproject.toml) to set your project dependencies.
-    - [pre-commit-config.yaml](pre-commit-config.yaml) to set your pre-commit hooks.
+    ```bash
+    docker build -t gdal-python:0.0.1 .
+    ```
 
-3. Python files:
-    - [config.py](src/config.py) to load your project configuration.
-    - [logger.py](src/logger.py) to set up your logging configuration.
-    - [utils.py](src/utils.py) project utility methods.
-    - [decorators.py](src/decorators.py) project decorators.
+## Usage
 
-6. A sample project to test the *src package* in this template ([here](sample_project/main.py)).
+#### Run in **Visual Studio Code**
 
-5. A test-suite using the pytest framework to test the *src package* in this template ([here](tests/test_utils.py)).
+- Add the volumes to the VS Code docker configuration file `devcontainer.json`. See the template [here](/.devcontainer/template_devcontainer.json).
 
-6. Documentation:
-    - [linux shell cheatsheet](docs/cheatsheet_linux_shell.md)  overview of shell commands.
-    - [linux set up document](docs/linux_set_up.md) for a detailed description of different tools and how to publish your package.
+- Open the command palette and select "Remote-Containers: Reopen in Container"
 
--------
+#### Run a script or notebook from the command line
 
-## Set up and configure your project
+```bash
+# $PWD is the current working directory
+docker run -it --rm -v $(pwd)/data:/data -v $(pwd)/src:/src gdal-python:0.0.1 /bin/bash
 
-1. Click on the green button "Use this template" on GitHub.
-2. Open VS Code and clone the repository.
-3. Install the project dependencies:
-    - `make help` to see the available commands.
-    - `make install-global` to install packages such as pre-commit, poetry, and black globally using pipx.
-    - `make poetry-install` to install the project dependencies (creates poetry.lock)
-4. Set the Python Interperater to the poetry virtual environment.
-    - Select Interpreter *project-name-xxxxx-py.x.xx (poetry)*
-5. Set up the configuration files:
-    - check your project configuration: [config.yaml](config/config.yaml)
-    - set your environment variables: [template.env](config/template.env) (rename to .env, do not commit to git!!)
-    - check your logging configuration: [logging.yaml](config/logging.yaml)
-6. Set up linting and pre-commit hooks:
-    - `make codestyle` to run black, isort and ruff.
-    - `make pre-commit` to run pre-commit on all files.
-7. Run the tests:
-    - `make poetry-test` to run all tests.
-    - Run from VS Code: testing > configure python tests > pytest
-8. Run pre-commit hooks and commit your changes:
-    - `git add .` to add all files to the staging area.
-    - `make pre-commit` to run pre-commit on all files.
-    - `git commit -m "commit message"` to commit your changes.
+# ls / to see the mounted volumes
+ls /data
+ls /src
 
-9. Publish your package to PyPI:
-    - See the [linux set up document](docs/linux_set_up.md) for a detailed description of different tools and how to publish your package.
+# Run the script
+cd /src/shell
+./gdal_filegdb-gpkg.sh
+
+# Exit the container
+exit
+```
+
+#### Run a Jupyter notebook by starting the Jupyter server using Docker Compose
+
+- Run the container with docker-compose: `docker-compose up`
+- The `docker-compose.yml` file is configured to mount the `data/` and `config/` directories to the container.
+- The Jupyter notebook server is available at `http://localhost:8888`
+- The authentication token is printed in the terminal when the server starts `http://localhost:8888/tree?token=...`
+    
+     
+   
+
+
+
+
+ 
+
+
+
+
+
+
+
+
 
 
 ### Workflow
@@ -74,10 +76,6 @@ The following files are included in this template:
 -
 -
 
-### Citation
 
-### Acknowledgments
 
-*This repository is part of the project:*
 
-** xxxx Project** | Long name project.
