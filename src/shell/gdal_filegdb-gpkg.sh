@@ -3,11 +3,18 @@
 # run: ./filename.sh
 
 # set variables
-ROOT="/workspaces/py-linux-template/mnt/data"
-OUT_EPSG=25832
+GDB_PATH=$1
+OUT_EPSG=$2
+
+# check if there are any folders ending with .gdb in the directory
+if [ ! -d "$GDB_PATH" ]; then
+  echo "No .gdb folders found in the directory."
+  exit 1
+fi
+
 
 # loop through folder and convert all *.gdb to *.gpkg files
-for INPUT_FILE in $ROOT/*.gdb; do
+for INPUT_FILE in $GDB_PATH/*.gdb; do
   echo "Processing: $INPUT_FILE"
   OUTPUT_FILE="${INPUT_FILE%.gdb}_$OUT_EPSG.gpkg"
 
