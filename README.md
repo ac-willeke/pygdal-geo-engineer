@@ -23,6 +23,8 @@ A collection of scripts to perform geospatial engineering tasks using GDAL, Pyth
 
 - Open the command palette and select "Remote-Containers: Reopen in Container"
 
+- Exit the container by clicking the "Remote-Containers: Reopen Locally" button in the bottom right corner of the window.
+
 #### Run a script or notebook from the command line
 
 ```bash
@@ -47,8 +49,8 @@ exit
 - The `docker-compose.yml` file is configured to mount the `data/` and `config/` directories to the container.
 - The Jupyter notebook server is available at `http://localhost:8888`
 - The authentication token is printed in the terminal when the server starts `http://localhost:8888/tree?token=...`
-    
-     
+- Exit the server by pressing `Ctrl+C` in the terminal and then running `docker-compose down`     
+
 ## Scripts and Notebooks
 
 More information about the standalone scripts and Jupyter notebooks can be found in the [src/README](/src/README.md) file and the [notebooks/README](/notebooks/README.md) file.
