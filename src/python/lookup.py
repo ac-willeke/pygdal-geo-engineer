@@ -1,11 +1,13 @@
 import os
+from typing import Tuple
+from osgeo import ogr
 import pandas as pd
 
 
 def create_lookup_dict(
-    lookup_df,
-    keys=("artype", "artreslag", "arskogbon", "arjordbr", "ardyrkning", "arveget"),
-    value="ar50_bonitet",
+    lookup_df: pd.DataFrame,
+    keys: Tuple[str, ...],
+    value: str,
 ):
     """
     Convert a lookup DF to a lookup DICT
@@ -15,9 +17,9 @@ def create_lookup_dict(
     lookup_df : pandas dataframe
         lookup table loaded into a dataframe
     keys : tuple, optional
-        lookup key(s), by default ("artype", "artreslag", "arskogbon", "arjordbr", "ardyrkning", "arveget")
+        lookup key(s)
     value : str, optional
-        lookup value, by default "ar50_bonitet"
+        lookup value
 
     Returns
     -------
@@ -27,25 +29,16 @@ def create_lookup_dict(
 
     lookup_dict = {}
     for index, row in lookup_df.iterrows():
-        lookup_dict[
-            (
-                row[keys(1)],
-                row[keys(2)],
-                row[keys(3)],
-                row[keys(4)],
-                row[keys(5)],
-                row[keys(6)],
-            )
-        ] = row[value]
+        lookup_dict[tuple(row[key] for key in keys)] = row[value]
     return lookup_dict
 
 
 def lookup_value(
-    lyr,
-    lookup_dict,
-    keys=("artype", "artreslag", "arskogbon", "arjordbr", "ardyrkning", "arveget"),
-    value="ar50_bonitet",
-):
+    lyr: ogr.Layer,
+    lookup_dict: dict,
+    keys: tuple,
+    value: str,
+) -> ogr.Layer:
     """
     Reclassify an attribute value using ogr lyr object
     and a lookup DICT.
@@ -60,20 +53,14 @@ def lookup_value(
         tuple with field names
     """
 
-    for feature, keys in lyr:
-
-        key = (
-            feature.GetField(keys(1)),
-            feature.GetField(keys(2)),
-            feature.GetField(keys(3)),
-            feature.GetField(keys(4)),
-            feature.GetField(keys(5)),
-            feature.GetField(keys(6)),
-        )
+    for feature in lyr:
+        key = tuple(int(feature.GetField(key)) for key in keys)
+        print(key)
         if key in lookup_dict:
             new_value = lookup_dict[key]
             feature.SetField(value, int(new_value))
             lyr.SetFeature(feature)
+    return key
 
 
 def main():
