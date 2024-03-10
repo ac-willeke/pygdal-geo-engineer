@@ -26,6 +26,7 @@ rioxarray = "^0.15.0"
 jupyter = "^1.0.0"
 leafmap = "^0.31.5"
 ipyleaflet = "^0.18.2"
+pyarrow = "^15.0.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
