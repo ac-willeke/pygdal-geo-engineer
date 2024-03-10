@@ -1,6 +1,8 @@
 import os
 import duckdb
 import geopandas as gpd
+from typing import List, Union
+
 
 
 def load_gpkg_layers(db_path, gpkg_path, layer_name):
@@ -26,7 +28,7 @@ def load_gpkg_layers(db_path, gpkg_path, layer_name):
         con.load_extension("spatial")
 
         # check if table exists
-        table_exists = con.execute(
+        table_exists = con.sql(
             f"SELECT name FROM sqlite_master WHERE type='table' AND name='{layer_name}';"
         ).fetchone()
         if table_exists:
@@ -35,7 +37,7 @@ def load_gpkg_layers(db_path, gpkg_path, layer_name):
 
         # add table
         if os.path.exists(parquet_path):
-            con.execute(
+            con.sql(
                 f"""
                 CREATE TABLE {layer_name} AS 
                 SELECT * 
@@ -44,14 +46,7 @@ def load_gpkg_layers(db_path, gpkg_path, layer_name):
             )
             print(f"Loaded table: {layer_name}")
 
-            # get columns
-            columns = (
-                con.execute(f"PRAGMA table_info({layer_name})")
-                .fetch_df()["name"]
-                .tolist()
-            )
 
-            print(f"Table columns:\n {columns}")
 
         else:
             print(f"File {parquet_path} does not exist. Skipping.")
@@ -72,58 +67,13 @@ def print_duckdb_info(db_path):
         con.load_extension("spatial")
 
         # Get table names
-        tables = con.execute(
+        tables = con.sql(
             "SELECT name FROM sqlite_master WHERE type='table';"
         ).fetchall()
         print("Tables:", tables)
         
 
     return
-
-
-def ar50_area_class2(db_path, tbl_study_area, id, tbl_ar50, ar50_field, area_class, new_field):
-    """ Calculate the area of overlap between the study area (e.g. protected areas) and 
-    the AR50 area class. The area of overlap is calculated for each study area polygon defined
-    by the id field and area class. The result is stored in the new field.
-
-    Args:
-        db_path (_type_): _description_
-        tbl_study_area (_type_): _description_
-        id (_type_): _description_
-        tbl_ar50 (_type_): _description_
-        ar50_field (_type_): _description_
-        area_class (_type_): _description_
-        new_field (_type_): _description_
-    """       
-    conn = duckdb.connect(database=db_path, read_only=False)
-
-    # Create a temp table with the sum of the overlapping areas
-    conn.execute(f"""
-        CREATE TEMPORARY TABLE tbl_sum_ar50 AS
-        SELECT
-            study_area.{id},
-            SUM( ST_Area( ST_Intersection( study_area.geom, ar50_overlap.geom ) ) ) as sum
-        FROM
-            {tbl_study_area} as study_area,
-            {tbl_ar50} as ar50_overlap
-        WHERE
-            overlapp.{ar50_field} = ANY ({area_class}) AND
-            ST_Intersects( study_area.geom, ar50_overlap.geom )
-        GROUP BY study_area.{id}
-    """)
-
-    # Update the field in the original table (study area) with the calculated sums 
-    # of overlap with the AR50 area class
-    conn.execute(f"""
-        UPDATE {tbl_study_area} as study_area
-        SET {new_field} = tmp_ar50.sum
-        FROM tbl_sum_ar50 as tmp_ar50
-        WHERE vern.{id} = tmp_ar50.{id}
-    """)
-
-    conn.close()
-
-from typing import List, Union
 
 def ar50_area_class(db_path: str, tbl_study_area: str, id: str, tbl_ar50: str, ar50_field: str, area_class: Union[int, List[int]], new_field: str) -> None:
     """ Calculate the area of overlap between the study area (e.g. protected areas) and 
@@ -145,32 +95,82 @@ def ar50_area_class(db_path: str, tbl_study_area: str, id: str, tbl_ar50: str, a
     try:
         with duckdb.connect(database=db_path, read_only=False) as conn:
             # spatial extension
-            conn.execute("INSTALL spatial;")
-            conn.execute("LOAD spatial;")
+            conn.sql("INSTALL spatial;")
+            conn.sql("LOAD spatial;")
             
             
             # Create a temp table with the sum of the overlapping areas
-            conn.execute(f"""
+            conn.sql(f"""
                 CREATE TEMPORARY TABLE tbl_sum_ar50 AS
                 SELECT
                     study_area.{id},
-                    SUM( ST_Area( ST_Intersection( study_area.geometry, ar50_overlap.geometry ) ) ) as sum
+                    SUM( ST_Area( ST_Intersection( study_area.geom, ar50_overlap.geom ) ) ) as sum
                 FROM
                     {tbl_study_area} as study_area,
                     {tbl_ar50} as ar50_overlap
                 WHERE
                     ar50_overlap.{ar50_field} IN ({area_class_str}) AND
-                    ST_Intersects( study_area.geometry, ar50_overlap.geometry )
+                    ST_Intersects( study_area.geom, ar50_overlap.geom )
                 GROUP BY study_area.{id}
+            """)
+            
+            ## add the new field to the study area table
+            conn.sql(f"""
+                ALTER TABLE {tbl_study_area}
+                ADD COLUMN {new_field} REAL
             """)
 
             # Update the field in the original table (study area) with the calculated sums 
             # of overlap with the AR50 area class
-            conn.execute(f"""
+            conn.sql(f"""
                 UPDATE {tbl_study_area} as study_area
                 SET {new_field} = tmp_ar50.sum
                 FROM tbl_sum_ar50 as tmp_ar50
-                WHERE vern.{id} = tmp_ar50.{id}
+                WHERE study_area.{id} = tmp_ar50.{id}
             """)
     except Exception as e:
         print(f"An error occurred: {e}")
+        
+def blob_to_geom(db_path, tbl_name, blob_field, geom_field):
+    """ Convert a BLOB field to a geometry field.
+
+    Args:
+        db_path (str): Path to the database.
+        tbl_name (str): Name of the table.
+        blob_field (str): Name of the BLOB field.
+        geom_field (str): Name of the geometry field.
+    """ 
+    try:
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # spatial extension
+            conn.sql("INSTALL spatial;")
+            conn.sql("LOAD spatial;")
+
+            # Create a tmp table with the geometry field
+            # duckdb does not support direct updating of columns
+            conn.sql(f"""
+                CREATE TABLE {tbl_name}_tmp AS 
+                SELECT *, ST_GeomFromWKB({blob_field}) AS {geom_field}
+                FROM {tbl_name}
+            """)
+            
+            # drop the blob field
+            conn.sql(f"""
+                ALTER TABLE {tbl_name}_tmp
+                DROP COLUMN {blob_field}
+            """
+            )
+            
+            # drop the original table
+            conn.sql(f"DROP TABLE {tbl_name}")
+            
+            # rename the tmp table
+            conn.sql(f"ALTER TABLE {tbl_name}_tmp RENAME TO {tbl_name}")
+            
+            return 
+            
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        
+        
+        
