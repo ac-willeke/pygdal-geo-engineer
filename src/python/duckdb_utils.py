@@ -286,7 +286,7 @@ def geom_peri(db_path: str, tbl_name: str, geom_field: str, peri_field: str) -> 
             """
             )
 
-            # calculate the area
+            # calculate the perimeter
             conn.sql(
                 f"""
                 UPDATE {tbl_name} as study_area
