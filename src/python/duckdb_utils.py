@@ -95,6 +95,78 @@ def print_duckdb_info(db_path):
 
     return
 
+def bioklima_area_class(
+    db_path: str,
+    tbl_study_area: str,
+    id: str,
+    tbl_bioklima: str,
+    bioklima_field: str,
+    area_class: Union[str, List[str]],
+    new_field: str,
+) -> None:
+    """Calculate the area of overlap between the study area and
+    the Bioklima area class. The area of overlap is calculated for each study area polygon defined
+    by the id field and area class. The result is stored in the new field.
+
+    Args:
+        db_path (str): Path to the database.
+        tbl_study_area (str): Name of the study area table.
+        id (str): ID field name.
+        tbl_bioklima (str): Name of the Bioklima table.
+        bioklima_field (str): Bioklima field name.
+        area_class (Union[str, List[str]]): Area class or list of area classes.
+        new_field (str): Name of the new field to store the result.
+    """
+    # convert list to string
+    area_class_str = (
+        ", ".join(f"'{item}'" for item in area_class)
+        if isinstance(area_class, list)
+        else f"'{area_class}'"
+    )
+
+    try:
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # spatial extension
+            conn.sql("INSTALL spatial;")
+            conn.sql("LOAD spatial;")
+
+            # Create a temp table with the sum of the overlapping areas
+            conn.sql(
+                f"""
+                CREATE TEMPORARY TABLE tbl_sum_bioklima AS
+                SELECT
+                    study_area.{id},
+                    SUM( ST_Area( ST_Intersection( study_area.geom, bioklima_overlap.geom ) ) ) as sum
+                FROM
+                    {tbl_study_area} as study_area,
+                    {tbl_bioklima} as bioklima_overlap
+                WHERE
+                    bioklima_overlap.{bioklima_field} IN ({area_class_str}) AND
+                    ST_Intersects( study_area.geom, bioklima_overlap.geom )
+                GROUP BY study_area.{id}
+            """
+            )
+
+            ## add the new field to the study area table
+            conn.sql(
+                f"""
+                ALTER TABLE {tbl_study_area}
+                ADD COLUMN {new_field} REAL
+            """
+            )
+
+            # Update the field in the original table (study area) with the calculated sums
+            # of overlap with the Bioklima area class
+            conn.sql(
+                f"""
+                UPDATE {tbl_study_area} as study_area
+                SET {new_field} = tmp_bioklima.sum
+                FROM tbl_sum_bioklima as tmp_bioklima
+                WHERE study_area.{id} = tmp_bioklima.{id}
+            """
+            )
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def ar50_area_class(
     db_path: str,
@@ -260,6 +332,47 @@ def geom_area(db_path: str, tbl_name: str, geom_field: str, area_field: str) -> 
     except Exception as e:
         print(f"An error occurred: {e}")
 
+def geom_area_byID(db_path: str, tbl_name: str, id_field: str, geom_field: str, area_field: str) -> None:
+    """
+    Calculate the sum of the areas of the geometries with the same ID and store the result in a new field.
+
+    Args:
+        db_path (str): Path to the database.
+        tbl_name (str): Name of the table.
+        geom_field (str): Name of the geometry field.
+        area_field (str): Name of the new field to store the result.
+        id_field (str): Name of the ID field to group by.
+    """
+
+    try:
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # spatial extension
+            conn.sql("INSTALL spatial;")
+            conn.sql("LOAD spatial;")
+
+            # add the area field to the table
+            conn.sql(
+                f"""
+                ALTER TABLE {tbl_name}
+                ADD COLUMN {area_field} REAL
+            """
+            )
+
+            # calculate the sum of the areas for each ID
+            conn.sql(
+                f"""
+                UPDATE {tbl_name} as study_area
+                SET {area_field} = subquery.area
+                FROM (
+                    SELECT {id_field}, SUM(ST_Area({geom_field})) as area
+                    FROM {tbl_name}
+                    GROUP BY {id_field}
+                ) as subquery
+                WHERE study_area.{id_field} = subquery.{id_field}
+            """
+            )
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def geom_peri(db_path: str, tbl_name: str, geom_field: str, peri_field: str) -> None:
     """
@@ -290,12 +403,151 @@ def geom_peri(db_path: str, tbl_name: str, geom_field: str, peri_field: str) -> 
             conn.sql(
                 f"""
                 UPDATE {tbl_name} as study_area
-                SET {peri_field} = ST_Peri({geom_field})
+                SET {peri_field} = ST_Perimeter({geom_field})
             """
             )
     except Exception as e:
         print(f"An error occurred: {e}")
 
+
+def geom_peri_byID(db_path: str, tbl_name: str, id_field: str, geom_field: str, peri_field: str) -> None:
+    """
+    Calculate the sum of the perimeters of the geometries with the same ID and store the result in a new field.
+
+    Args:
+        db_path (str): Path to the database.
+        tbl_name (str): Name of the table.
+        geom_field (str): Name of the geometry field.
+        peri_field (str): Name of the new field to store the result.
+        id_field (str): Name of the ID field to group by.
+    """
+
+    try:
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # spatial extension
+            conn.sql("INSTALL spatial;")
+            conn.sql("LOAD spatial;")
+
+            # add the perimeter field to the table
+            conn.sql(
+                f"""
+                ALTER TABLE {tbl_name}
+                ADD COLUMN {peri_field} REAL
+            """
+            )
+
+            # calculate the sum of the perimeters for each ID
+            conn.sql(
+                f"""
+                UPDATE {tbl_name} as study_area
+                SET {peri_field} = subquery.perimeter
+                FROM (
+                    SELECT {id_field}, SUM(ST_Perimeter({geom_field})) as perimeter
+                    FROM {tbl_name}
+                    GROUP BY {id_field}
+                ) as subquery
+                WHERE study_area.{id_field} = subquery.{id_field}
+            """
+            )
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def geom_index(db_path: str, tbl_name: str, geom_field: str, index_field: str) -> None:
+    """Calculate the shape index and store in a new field. 
+    Shape index = perimeter / (2 * pi * sqrt(area/pi))
+    
+    The shape index is a measure of how compact the shape is compared to a circle with the same area. 
+    The shape index is a value between 0 and 1, where 0 is a perfect circle and 1 is a long and narrow shape.
+
+    Args:
+        db_path (str): Path to the database.
+        tbl_name (str): Name of the table.
+        geom_field (str): Name of the geometry field.
+        index_field (str): Name of the new field to store the result.
+    
+    Returns:
+        Shape index (float): 
+        - SI = 1, shape is a perfect circle
+        - SI > 1, shape is less compact than a circle
+        - SI < 1, is not possible for a shape to have a shape index less than 1
+    """
+    
+    try:
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # spatial extension
+            conn.sql("INSTALL spatial;")
+            conn.sql("LOAD spatial;")
+
+            # add the index field to the study area table
+            conn.sql(
+                f"""
+                ALTER TABLE {tbl_name}
+                ADD COLUMN {index_field} REAL
+            """
+            )
+
+            # calculate the shape index
+            conn.sql(
+                f"""
+                UPDATE {tbl_name} as study_area
+                SET {index_field} = ST_Perimeter({geom_field}) / (2 * PI() * sqrt(ST_Area({geom_field}) / PI()))
+                """
+            )
+            
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+def geom_index_byID(db_path: str, tbl_name: str, id_field: str, geom_field: str, index_field: str) -> None:
+    """Calculate the shape index and store in a new field. 
+    Shape index = perimeter / (2 * PI() * sqrt(area/pi))
+    
+    The shape index is a measure of how compact the shape is compared to a circle with the same area. 
+    The shape index is a value between 0 and 1, where 0 is a perfect circle and 1 is a long and narrow shape.
+
+    Args:
+        db_path (str): Path to the database.
+        tbl_name (str): Name of the table.
+        geom_field (str): Name of the geometry field.
+        index_field (str): Name of the new field to store the result.
+        id_field (str): Name of the id field to group by.
+    
+    Returns:
+        Shape index (float): 
+        - SI = 1, shape is a perfect circle
+        - SI > 1, shape is less compact than a circle
+        - SI < 1, is not possible for a shape to have a shape index less than 1
+    """
+    
+    try:
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # spatial extension
+            conn.sql("INSTALL spatial;")
+            conn.sql("LOAD spatial;")
+
+            # add the index field to the study area table
+            conn.sql(
+                f"""
+                ALTER TABLE {tbl_name}
+                ADD COLUMN {index_field} REAL
+            """
+            )
+
+            # calculate the shape index
+            conn.sql(
+                f"""
+                UPDATE {tbl_name} as study_area
+                SET {index_field} = subquery.perimeter / (2 * PI() * sqrt(subquery.area / PI()))
+                FROM (
+                    SELECT {id_field}, SUM(ST_Perimeter({geom_field})) as perimeter, SUM(ST_Area({geom_field})) as area
+                    FROM {tbl_name}
+                    GROUP BY {id_field}
+                ) as subquery
+                WHERE study_area.{id_field} = subquery.{id_field}
+                """
+            )
+            
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def area_difference(
     db_path: str, tbl_name: str, field_a: str, field_b: str, area_diff_field: str
@@ -381,14 +633,128 @@ def blob_to_geom(db_path, tbl_name, blob_field, geom_field):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+def split_by_polygon(db_path, tbl_study_area, id, tbl_ar50, group_field, group, output_tbl_a, output_tbl_b):
+    try: 
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # spatial extension
+            conn.execute("INSTALL spatial;")
+            conn.execute("LOAD spatial;")
 
-def split_by_polygon(
-    db_path, tbl_study_area, id, tbl_ar50, ar50_field, output_tbl_a, output_tbl_b
-):
+            # Split the polygon
+            conn.execute(f"""
+                CREATE TABLE {output_tbl_a} AS
+                SELECT 
+                    {id}, 
+                    ST_Intersection(a.geom, b.geom) as geom
+                FROM 
+                    {tbl_ar50} a, {tbl_study_area} b
+                WHERE a.{group_field} = {group} AND ST_Intersects(a.geom, b.geom);
+            """)
+
+            conn.execute(f"""
+                CREATE TABLE {output_tbl_b} AS
+                SELECT 
+                    {id}, 
+                    ST_Intersection(
+                        ST_Difference(a.geom, b.geom),
+                        b.geom
+                    ) as geom
+                FROM 
+                    {tbl_ar50} a, {tbl_study_area} b
+                WHERE a.{group_field} = {group} AND ST_Intersects(a.geom, b.geom);
+            """)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        
+def join_tables_create_new(db_path: str, tbl1: str, tbl2: str, id_field: str, new_tbl: str) -> None:
     """
-    Split a polygon using an another polygon layer. The output is two new tables with the
-    geometries of the respective split polygon layers.
+    Join two tables on a common ID field and create a new table from the result.
 
     Args:
         db_path (str): Path to the database.
+        tbl1 (str): Name of the first table.
+        tbl2 (str): Name of the second table.
+        id_field (str): Name of the ID field to join on.
+        new_tbl (str): Name of the new table to create.
     """
+
+    try:
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # join the tables and create a new table
+            conn.sql(
+                f"""
+                CREATE TABLE {new_tbl} AS
+                SELECT *
+                FROM {tbl1}
+                FULL JOIN {tbl2}
+                ON {tbl1}.{id_field} = {tbl2}.{id_field}
+                """
+            )
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        
+def remove_duplicates(db_path: str, tbl_name: str, id_field: str) -> None:
+    """
+    Remove duplicate entries from a table based on a specific field.
+
+    Args:
+        db_path (str): Path to the database.
+        tbl_name (str): Name of the table.
+        id_field (str): Name of the field to check for duplicates.
+    """
+
+    try:
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # create a temporary table with distinct records
+            conn.sql(
+                f"""
+                CREATE TABLE temp_table AS
+                SELECT DISTINCT *
+                FROM {tbl_name}
+                """
+            )
+
+            # delete all records from the original table
+            conn.sql(
+                f"""
+                DELETE FROM {tbl_name}
+                """
+            )
+
+            # insert the distinct records back into the original table
+            conn.sql(
+                f"""
+                INSERT INTO {tbl_name}
+                SELECT * FROM temp_table
+                """
+            )
+            
+            # drop the temporary table
+            conn.sql(
+                f"""
+                DROP TABLE temp_table
+                """
+            )
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        
+
+def delete_lines_points(db_path, input_table, output_table):
+    try: 
+        with duckdb.connect(database=db_path, read_only=False) as conn:
+            # spatial extension
+            conn.execute("INSTALL spatial;")
+            conn.execute("LOAD spatial;")
+
+            # Clean the geometry and remove points and lines
+            conn.execute(f"""
+                CREATE TABLE {output_table} AS
+                SELECT 
+                    *,
+                    ST_MakeValid(geom) as clean_geom
+                FROM 
+                    {input_table}
+                WHERE ST_GeometryType(geom) NOT IN ('POINT', 'LINESTRING');
+            """)
+    except Exception as e:
+        print(f"An error occurred: {e}")
