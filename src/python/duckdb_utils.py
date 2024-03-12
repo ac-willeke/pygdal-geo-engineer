@@ -640,7 +640,7 @@ def split_by_polygon(db_path, tbl_study_area, id, tbl_ar50, group_field, group, 
             conn.execute("INSTALL spatial;")
             conn.execute("LOAD spatial;")
 
-            # Split the polygon
+            # extract the part of the study area that OVERLAPS with the AR50 area class X
             conn.execute(f"""
                 CREATE TABLE {output_tbl_a} AS
                 SELECT 
@@ -650,14 +650,15 @@ def split_by_polygon(db_path, tbl_study_area, id, tbl_ar50, group_field, group, 
                     {tbl_ar50} a, {tbl_study_area} b
                 WHERE a.{group_field} = {group} AND ST_Intersects(a.geom, b.geom);
             """)
-
+            
+            # extract the part of the study area that DOES NOT OVERLAP with the AR50 area class X
             conn.execute(f"""
                 CREATE TABLE {output_tbl_b} AS
                 SELECT 
                     {id}, 
-                    ST_Intersection(
-                        ST_Difference(a.geom, b.geom),
-                        b.geom
+                    ST_Difference(
+                        b.geom,
+                        a.geom
                     ) as geom
                 FROM 
                     {tbl_ar50} a, {tbl_study_area} b
