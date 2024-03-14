@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 
-from utils import yaml_load
+from py_scripts.utils import yaml_load
 
 # --------------------------------------------------------------------------- #
 # Load secure variables from .env file
@@ -18,7 +18,7 @@ from utils import yaml_load
 # load_dotenv(dotenv_path)
 
 # path to yaml project configuration file
-project_root = Path(__file__).parents[1]
+project_root = Path(__file__).parents[2]
 
 
 # --------------------------------------------------------------------------- #

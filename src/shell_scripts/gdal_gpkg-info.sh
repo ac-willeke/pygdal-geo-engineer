@@ -4,10 +4,12 @@
 
 # set variables
 DATA_PATH=$1          # "path/to/file"
-INPUT_FILE=$2     # "input.gpkg"
-LOG_FILE="reproject.log"
-METADATA_FILE="metadata.txt"
+INPUT_FILE=$2   # "input.gpkg"
+BASE_INPUT_FILE=$(basename $INPUT_FILE .gpkg)  
+LOG_FILE="log/gdal_gpkg-info.log"
+METADATA_FILE="$DATA_PATH/metadata_$BASE_INPUT_FILE.txt"
 DRIVER="GPKG"
+
 
 
 # Log info

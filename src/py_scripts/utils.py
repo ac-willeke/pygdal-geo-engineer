@@ -8,10 +8,10 @@ from typing import IO, Union
 
 import yaml
 from dotenv import load_dotenv
+from py_scripts import PROJECT_ROOT
 
-# load .env file from project root
-project_dir = os.path.join(os.path.dirname(__file__), os.pardir)
-dotenv_path = os.path.join(project_dir, "config/.env")
+# load .env file from /config
+dotenv_path = os.path.join(PROJECT_ROOT, "config/.env")
 load_dotenv(dotenv_path)
 
 

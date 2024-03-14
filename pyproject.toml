@@ -5,13 +5,16 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry]
 name = "pygdal-geo-engineer"
 version = "0.1.0"
-description = "Project for geoengineering using Python and GDAL."
-authors = ["Willeke A'Campo (linux vdi) <willeke.acampo@nina.no>"]
+description = "Project for geo-engineering using Python, GDAL and SQL."
+authors = ["Willeke A'Campo <willeke.acampo@nina.no>"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/ac-willeke/pygdal-geo-engineer"
-keywords = ["template", "packaging"]
+keywords = ["geodata", "spatial"]
 
+packages = [
+    {include="py_scripts", from = "src"}
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"

@@ -64,7 +64,7 @@ def lookup_value(
 
 
 def main():
-    from ogr_utils import import_gpkg, print_layer_schema
+    from load import import_gpkg, print_layer_schema
 
     # Import GPKG lyr to ogr lyr-object
     in_gpkg = input("Enter filepath to GPKG:")

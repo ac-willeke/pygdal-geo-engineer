@@ -88,6 +88,8 @@ data/*
 notebooks/private_projects/*
 !notebooks/private_projects/.gitkeep
 
+src/shell_scripts/log/*
+!src/shell_scripts/log/.gitkeep
 
 # vscode
 .vscode

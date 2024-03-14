@@ -1,5 +1,6 @@
 from osgeo import ogr
 
+
 def import_gpkg(in_gpkg, layer_name, new_field_name):
     ds = ogr.Open(in_gpkg, 1)
     lyr = ds.GetLayerByName(layer_name)
@@ -8,9 +9,9 @@ def import_gpkg(in_gpkg, layer_name, new_field_name):
         lyr.CreateField(new_field_defn)
     return ds, lyr
 
+
 def print_layer_schema(lyr):
     print("Layer schema:")
     print("Name, Type, Width, Precision")
     for field in lyr.schema:
         print(field.name, field.type, field.width, field.precision)
-        

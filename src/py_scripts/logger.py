@@ -3,11 +3,11 @@ import logging
 import logging.config
 import os
 import sys
-
 import yaml
 
-project_dir = os.path.join(os.path.dirname(__file__), os.pardir)
-config_file = os.path.join(project_dir, "config/config_logger.yaml")
+from py_scripts import PROJECT_ROOT
+
+config_file = os.path.join(PROJECT_ROOT, "config/config_logger.yaml")
 
 
 def reset_logger():
@@ -55,7 +55,7 @@ def setup_logging(
 
         # update info file handler
         config["handlers"]["info_file_handler"]["filename"] = os.path.join(
-            project_dir, "log", logfile_name
+            PROJECT_ROOT, "log", logfile_name
         )
 
         # load configuration
@@ -110,7 +110,7 @@ class Test(object):
         """Log project configuration"""
         try:
             # loaded as module
-            from src.config import load_catalog, load_parameters  # noqa
+            from py_scripts.config import load_catalog, load_parameters  # noqa
         except ModuleNotFoundError:
             # standalone use of logger.py
             from config import load_catalog, load_parameters  # noqa

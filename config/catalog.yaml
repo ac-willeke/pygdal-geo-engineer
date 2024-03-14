@@ -1,18 +1,25 @@
-# ${PROJECT}: path/to/local/project/catalog
-# stored in user-dir/.env
+# ${DATA_PATH}: path/to/local/project/catalog
+# stored in path/to/project/config/.env
 
 # ----------------------------
 # DATA CATALOG
 # ----------------------------
 
-name:
-  type: filegdb
-  filepath: ${TEMP}/path/to/gdb
+project_data:
+  type: folder
+  filepath: ${DATA_PATH}
 
+raw:
+  type: folder
+  filepath: ${DATA_PATH}/raw
 
-name2:
-  type: excel
-  filepath: ${TEMP}/path/to/excel
+interim:
+  type: folder
+  filepath: ${DATA_PATH}/interim
+
+processed:
+  type: folder
+  filepath: ${DATA_PATH}/processed
 
 # ----------------------------
 # METADATA
