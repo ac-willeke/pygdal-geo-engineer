@@ -6,20 +6,37 @@
 # ----------------------------
 
 project_data:
-  type: folder
-  filepath: ${DATA_PATH}
+    type: folder
+    filepath: ${DATA_PATH}
 
-raw:
-  type: folder
-  filepath: ${DATA_PATH}/raw
+bioclimatic_zones:
+    type: filegdb
+    filepath: "${NINA_R}/GeoSpatialData/BiogeographicalRegions/Norway_PCA_klima/Original/20170614_Bioklima/20170614_Bioklima.gdb"
+    layer: Soner2017
+    year: 2017
 
-interim:
-  type: folder
-  filepath: ${DATA_PATH}/interim
+ar50:
+    type: filegdb
+    filepath: "${NINA_R}/GeoSpatialData/LandCover/Norway_LandResource_AR50/Original/versjon20221321/Arealressurskart - AR50/0000_25833_ar50_gdb.gdb"
+    layer: ar50_flate
+    year: 2022
 
-processed:
-  type: folder
-  filepath: ${DATA_PATH}/processed
+n50:
+    type: filegdb
+    filepath: "${NINA_R}/GeoSpatialData/Topography/Norway_N50/Original/N50 Kartdata FGDB-format/Basisdata_0000_Norge_25833_N50Kartdata_FGDB.gdb"
+    layer: N50_Arealdekke_omrade
+    year: 2021
+
+fylke:
+    type: filegdb
+    filepath: "${NINA_R}/GeoSpatialData/AdministrativeUnits/Norway_AdministrativeUnits/Original/Norway_County/Administrative_enheter_fylker_2024_FGDB-format/Basisdata_0000_Norge_25833_Fylker2024_FGDB.gdb"
+    layer: fylke
+    year: 2024
+
+fkb_vann:
+    type: filegdb
+    filepath: "/home/NINA.NO/willeke.acampo/Mounts/R/GeoSpatialData/Topography/Norway_FKB/Original/FKB-Vann FGDB-format/Basisdata_0000_Norge_5973_FKB-Vann_FGDB.gdb"
+    layer: fkb_vann_omrade
 
 # ----------------------------
 # METADATA

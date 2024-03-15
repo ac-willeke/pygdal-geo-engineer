@@ -1,7 +1,11 @@
-study_area: country, county, municipality, district, city, area
-
-# coordinate system
 spatial_reference:
   utm32: "ETRS 1989 UTM Zone 32N"
   utm33: "ETRS 1989 UTM Zone 33N"
   utm35: "ETRS 1989 UTM Zone 35N"
+  wgs84: "WGS 1984"
+
+EPSG:
+  utm32: 25832
+  utm33: 25833
+  utm35: 25835
+  wgs84: 4326
