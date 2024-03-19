@@ -5,19 +5,55 @@ PYGDAL-GEO-ENGINEER
 
 A collection of scripts to perform geospatial engineering tasks using GDAL, Python and SQL. The scripts are organized in a modular way under `src/` and are designed to be run from the command line or within a Jupyter notebook.
 
-## Installation 
+## Getting Started 
 
-1. Clone the repository and navigate to the project directory
+This project utilizes GDAL, known for its complex installation. To simplify this, a Dockerfile is included, leveraging a GDAL image to run the project within a container. Alternatively, if GDAL bindings are already installed on your machine, the pyproject.toml file can be used to set up a virtual environment.
+    
+### Virtual Environment 
 
-2. Build the docker image
+You can use the `pyproject.toml` file  to set up a virtual environment. This ensures all Python dependencies and the scripts in `src\py-scripts` are installed in the environment. 
+
+To set up a Poetry virtual environment, follow these steps:
+
+```bash
+# Navigate to your project directory where your pyproject.toml is located
+cd /path/to/your/project
+
+# Install the project dependencies
+poetry install
+
+# Activate the virtual environment
+poetry shell
+```
+
+
+```bash
+# Create a virtual environment
+python3 -m venv .venv
+# Activate the virtual environment
+source .venv/bin/activate
+# Install the requirements
+pip install -r requirements.txt
+```
+
+
+### Docker
+
+The project root contains a Dockerfile that utilizes a GDAL image and automatically installs dependencies from `pyproject.toml`. This Dockerfile also configures a Jupyter server, enabling the execution of notebooks within the server environment.
+
+#### Build the Docker image
 
     ```bash
     docker build -t gdal-python:0.0.1 .
     ```
 
-## Usage
+#### Run the Docker image
 
-#### Run in **Visual Studio Code**
+There are several methods to interact with and run the code within the container. You can utilize Visual Studio Code or a Jupyter server for an interactive approach, or execute scripts directly via the command line.
+
+**Please note**, the container does not include any data. Ensure to mount your data into the container accordingly.
+
+#### 1. Execute in a Container via Visual Studio Code
 
 - Add the volumes to the VS Code docker configuration file `devcontainer.json`. See the template [here](/.devcontainer/template_devcontainer.json).
 
@@ -25,7 +61,15 @@ A collection of scripts to perform geospatial engineering tasks using GDAL, Pyth
 
 - Exit the container by clicking the "Remote-Containers: Reopen Locally" button in the bottom right corner of the window.
 
-#### Run a script or notebook from the command line
+#### 2. Launch a Jupyter Notebook via Docker Compose
+
+- Run the container with docker-compose: `docker-compose up`
+- The `docker-compose.yml` file is configured to mount the `data/` and `config/` directories to the container.
+- The Jupyter notebook server is available at `http://localhost:8888`
+- The authentication token is printed in the terminal when the server starts `http://localhost:8888/tree?token=...`
+- Exit the server by pressing `Ctrl+C` in the terminal and then running `docker-compose down`     
+
+#### 3. Run Scripts or Notebooks from the Command Line
 
 ```bash
 # $PWD is the current working directory
@@ -42,14 +86,6 @@ cd /src/shell
 # Exit the container
 exit
 ```
-
-#### Run a Jupyter notebook by starting the Jupyter server using Docker Compose
-
-- Run the container with docker-compose: `docker-compose up`
-- The `docker-compose.yml` file is configured to mount the `data/` and `config/` directories to the container.
-- The Jupyter notebook server is available at `http://localhost:8888`
-- The authentication token is printed in the terminal when the server starts `http://localhost:8888/tree?token=...`
-- Exit the server by pressing `Ctrl+C` in the terminal and then running `docker-compose down`     
 
 ## Scripts and Notebooks
 
