@@ -9,6 +9,10 @@ project_data:
     type: folder
     filepath: ${DATA_PATH}
 
+infra_25m:
+    type: geotiff
+    filepath: "${NINA_P}/154004_omfang_vern_og_bevaring/GIS-data_bevaring/infrastrukturindeksen_25x25m/Infra25m_25833.tif"
+
 bioclimatic_zones:
     type: filegdb
     filepath: "${NINA_R}/GeoSpatialData/BiogeographicalRegions/Norway_PCA_klima/Original/20170614_Bioklima/20170614_Bioklima.gdb"
