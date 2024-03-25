@@ -12,7 +12,9 @@ def overlay_stats(raster_path, vector_gdf, buffer_distance) -> gpd.GeoDataFrame:
     if buffer_distance > 0:
         gdf = vector_gdf.copy()
         gdf['geometry'] = gdf.buffer(buffer_distance)
-    
+    else:
+        gdf = vector_gdf.copy()
+        
     # calc: min, max, mean, std, median
     stats = zonal_stats(
         gdf, 
