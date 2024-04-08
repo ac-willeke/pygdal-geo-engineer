@@ -212,6 +212,18 @@ def sum_area_cols(
 def extract_overlap_geom(
     db_path, id, input_a, group_field, group, input_b, output_a, output_b
 ):
+    """_summary_
+
+    Args:
+        db_path (str): path to the database
+        id (str): id of table that needs to be split
+        input_a (str): split by this table
+        group_field (str/int): split by this value
+        group (str): field name of the group
+        input_b (str): table to split
+        output_a (str): output split 1 (sea)
+        output_b (str): output split 2 (land)
+    """    
     try:
         with duckdb.connect(database=db_path, read_only=False) as conn:
             # spatial extension
@@ -228,7 +240,7 @@ def extract_overlap_geom(
                 FROM 
                     {input_a} a, {input_b} b
                 WHERE 
-                    a.{group_field} = {group} AND ST_Intersects(a.geom, b.geom);
+                    a.{group_field} = '{group}' AND ST_Intersects(a.geom, b.geom);
             """
             )
 
@@ -242,7 +254,7 @@ def extract_overlap_geom(
                 FROM 
                     {input_a} a, {input_b} b
                 WHERE 
-                    a.{group_field} != {group} AND ST_Intersects(a.geom, b.geom);
+                    a.{group_field} != '{group}' AND ST_Intersects(a.geom, b.geom);
             """
             )
 
