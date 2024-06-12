@@ -85,6 +85,7 @@ log/*
 !log/.gitkeep
 data/*
 !data/.gitkeep
+mnt/*
 notebooks/private_projects/*
 !notebooks/private_projects/.gitkeep
 
