@@ -3,6 +3,8 @@ Module for calculating area variables, suca as area, perimeter, and shape index.
 """
 
 import duckdb
+import geopandas as gpd
+
 
 
 def geom_area(db_path: str, tbl_name: str, geom_field: str, area_field: str) -> None:
@@ -22,13 +24,25 @@ def geom_area(db_path: str, tbl_name: str, geom_field: str, area_field: str) -> 
             conn.sql("INSTALL spatial;")
             conn.sql("LOAD spatial;")
 
-            # add the area field to the study area table
+            # add the area field to the study area table if not exists
+            
+            # remove col if exists
+            if area_field in conn.table(tbl_name).columns:
+                conn.sql(
+                    f"""
+                    ALTER TABLE {tbl_name}
+                    DROP COLUMN {area_field}
+                """
+                )
+            
             conn.sql(
                 f"""
                 ALTER TABLE {tbl_name}
                 ADD COLUMN {area_field} REAL
             """
             )
+            
+
 
             # calculate the area
             conn.sql(
@@ -306,3 +320,111 @@ def area_difference(
             )
     except Exception as e:
         print(f"An error occurred: {e}")
+
+# export duckdb table to gdf 
+def export_toGDF(db_path: str, tbl_name: str) -> gpd.GeoDataFrame:
+    """
+    Export a table from a duckdb database to a geopandas dataframe.
+
+    Args:
+        db_path (str): Path to the database.
+        tbl_name (str): Name of the table.
+    """
+    from shapely import wkt
+    import geopandas as gpd
+
+    try:
+        with duckdb.connect(database=db_path, read_only=True) as conn:
+            # spatial extension
+            conn.sql("INSTALL spatial;")
+            conn.sql("LOAD spatial;")
+            
+            # convert geom to correct format
+            df = conn.execute(f"SELECT ST_AsText(geom) as geometry, * FROM {tbl_name}").fetchdf()
+            df = df.drop(columns=["geom"])
+
+            # convert to wkt 
+            df['geometry'] = df['geometry'].apply(wkt.loads)
+
+            # convert to gdf
+            gdf = gpd.GeoDataFrame(df, geometry='geometry')
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        
+    return gdf
+
+
+if __name__ == "__main__":
+    
+    import os
+    
+    from py_scripts.my_duckdb import *
+
+    from py_scripts.config import load_catalog
+    
+    # load paths from catalog
+    catalog = load_catalog()
+    data_path = catalog["project_data"]["filepath"]
+
+    db_path = os.path.join(data_path, "tmp", "tmp.db")
+    gpkg_path = os.path.join(data_path, "processed", "naturvern_per_region_clip.gpkg")
+    csv_path = os.path.join(data_path, "processed", "CSV", "region_landareal")
+
+    layer_name = "midt_area"
+
+    # check if gpkg exists
+    if not os.path.exists(gpkg_path):
+        raise FileNotFoundError(f"File {gpkg_path} not found.")
+    
+    # gpkg to gdf 
+    gdf = gpd.read_file(gpkg_path, layer=layer_name)
+    print(gdf.head())
+    # check if gdf contains duplicates in naturvernId col
+    print(gdf['naturvernId'].duplicated().any())
+    
+    
+
+    # load gpkg into duckdb
+    # remove tabel
+    remove_table(db_path, layer_name)
+    load.load_gpkg_layers(db_path, gpkg_path, layer_name)
+    
+    blob_to_geom(
+        db_path=db_path,
+        tbl_name=layer_name,
+        blob_field="geometry",
+        geom_field="geom",   
+    )
+    
+    # delete "geometry field"
+    
+    
+    # calculate area
+    geom_area(
+        db_path=db_path, 
+        tbl_name=layer_name,
+        geom_field="geom",
+        area_field="landareal_m2"
+        )
+
+    # export to gpkg
+    out_layer = f"{layer_name}"
+    
+    gdf = export_toGDF(db_path, layer_name)
+    #print(gdf.head())
+    
+    # does gdf contain duplicates in naturvernId col?
+    #print(gdf['naturvernId'].duplicated().any())
+    
+    # export gdf to gpkg 
+    gdf.crs = "EPSG:25833"
+
+    
+    # Write to existing .geopackage
+    out_path = os.path.join(data_path, "processed")
+    #gdf.to_file(os.path.join(out_path, 'naturvern_per_region_landarea.gpkg'), driver='GPKG', layer=out_layer, mode='w')
+
+    # export gdf to csv 
+    df = gdf.drop(columns=["geometry"])
+    out_path = os.path.join(csv_path, f"{layer_name}_naturvern.csv")
+    #df.to_csv(out_path)
