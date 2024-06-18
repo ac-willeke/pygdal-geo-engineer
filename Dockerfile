@@ -1,23 +1,26 @@
 
-# Use the official GDAL image as the base image
+# base image: gdal
+# ensure py-gdal bindings installed with poetry are similar to gdal image
 FROM osgeo/gdal:ubuntu-small-3.6.3
 
-# Set the working directory in the container
+# Set the wd
 WORKDIR /app
 
-# Install pip and poetry, and clean up the apt cache
-RUN apt-get update && apt-get -y install python3-pip --fix-missing && \
+# Install dependencies in one layer to optimize build cache
+RUN apt-get update && \
+    apt-get -y install python3-pip --fix-missing && \
     pip3 install poetry && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Add src to PYTHONPATH
+COPY . /app/
+# Set the PYTHONPATH environment variable
+ENV PYTHONPATH="/workspaces/pygdal-geo-engineer/src:/app/src:${PYTHONPATH}"
 
 # POETRY ==================================================================== #
-# copy .toml and .lock files
-# set virtualenvs.create to false
-# gdal image already comes with a virtualenv
-# --no root prevents poetry from using root privileges
-# Poetry can only install depedenies in the current .venv
-
-COPY pyproject.toml poetry.lock ./
+# install poetry dependencies in base python
+COPY pyproject.toml /app/
 
 RUN poetry config virtualenvs.create false && \
     poetry install --no-root
@@ -29,6 +32,8 @@ ENV PATH="/app/venv/bin:$PATH"
 # Create a new user "jupyteruser" and change the owner of /app to jupyteruser
 RUN useradd -m jupyteruser && \
     chown jupyteruser:jupyteruser /app
+
+#USER jupyteruser
 
 # Expose port 8888 for the Jupyter notebook server
 EXPOSE 8888

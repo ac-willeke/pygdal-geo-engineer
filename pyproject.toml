@@ -8,7 +8,6 @@ version = "0.1.0"
 description = "Project for geo-engineering using Python, GDAL and SQL."
 authors = ["Willeke A'Campo <willeke.acampo@nina.no>"]
 license = "MIT"
-readme = "README.md"
 repository = "https://github.com/ac-willeke/pygdal-geo-engineer"
 keywords = ["geodata", "spatial"]
 
@@ -30,9 +29,9 @@ jupyter = "^1.0.0"
 leafmap = "^0.31.5"
 ipyleaflet = "^0.18.2"
 pyarrow = "^15.0.1"
-gdal = "^3.8.4"
 shapely = "^2.0.3"
 rasterstats = "^0.19.0"
+gdal = "3.6.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.7.0"
