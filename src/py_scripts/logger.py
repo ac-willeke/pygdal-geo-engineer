@@ -7,7 +7,7 @@ import yaml
 
 from py_scripts import PROJECT_ROOT
 
-config_file = os.path.join(PROJECT_ROOT, "config/config_logger.yaml")
+config_file = os.path.join(PROJECT_ROOT, "config/logging.yaml")
 
 
 def reset_logger():
@@ -19,7 +19,7 @@ def reset_logger():
 
 
 def setup_logging(
-    default_path="../config/logging.yaml",
+    default_path= config_file,
     default_level=logging.INFO,
 ):
     """
@@ -65,7 +65,7 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
         logging.info(
-            "Logging configuration file not found. Using default configuration."
+            f"Logging configuration file not found ({default_path}). Using default configuration."
         )
 
 
