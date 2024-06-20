@@ -3,6 +3,7 @@
 # NOTE:
 # *args allow our function to take any number of positional arguments (stored in a tuple)
 # ** kwargs allow our function to take any number of keyword arguments (stored in a dictionary)
+import logging
 from functools import wraps
 
 
@@ -22,7 +23,6 @@ def timer(func):
 
     """
 
-    import logging
     import time
 
     logger = logging.getLogger(__name__)
@@ -43,8 +43,6 @@ def timer(func):
 def exception_handler(func):
     """A decorator that catches exceptions."""
 
-    import logging
-
     logger = logging.getLogger(__name__)
 
     @wraps(func)
@@ -61,8 +59,7 @@ def exception_handler(func):
 
 def dec_logger(func):
     """A decorator that logs a function with info and error messages."""
-    import logging
-
+    
     logger = logging.getLogger(__name__)
 
     @wraps(func)
@@ -84,10 +81,8 @@ def dec_logger(func):
 
 def main():
     # simple console logger
-    import logging
     import time
 
-    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
     @timer
@@ -110,4 +105,10 @@ def main():
 
 
 if __name__ == "__main__":
+
+    # set up logging
+    from py_scripts.logger import setup_logging
+    setup_logging()
+    
+    # test decorators
     main()
